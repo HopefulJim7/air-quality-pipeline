@@ -1,0 +1,6 @@
+kafka-python-ng
+requests==2.31.0
+python-dotenv==1.0.0
+
+pyspark==3.5.1
+psycopg2-binary
