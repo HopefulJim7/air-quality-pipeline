@@ -1,5 +1,8 @@
 # 🌍 Real-Time Air Quality Monitoring Pipeline
 
+## 🚀 Live Dashboard
+👉 [View Live Dashboard](https://air-quality-pipeline-qe4cee8rgmqbvrwzc3hmhh.streamlit.app)
+
 ![Dashboard Preview](assets/01_aqi_cards.png)
 
 A production-grade, end-to-end real-time data engineering pipeline that 
@@ -61,27 +64,19 @@ dashboard to document pollution disparities across cities and regions.
 
 ## 🏗️ Architecture
 
+```
 OpenWeather API
-
-↓
-
+      ↓
 Python Producer (fetches every 10 min)
-
-↓
-
+      ↓
 Apache Kafka (air_quality_data topic)
-
-↓
-
+      ↓
 Apache Spark Structured Streaming (processes & validates)
-
-↓
-
+      ↓
 PostgreSQL (star schema data warehouse)
-
-↓
-
+      ↓
 Streamlit Dashboard (live visualization)
+```
 
 ---
 

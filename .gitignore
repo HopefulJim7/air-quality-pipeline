@@ -1,12 +1,20 @@
+# Environment variables
 .env
+
+# Python
 __pycache__/
 *.pyc
-.DS_Store
-.env
-__pycache__/
-*.pyc
-.DS_Store
-venv/
-checkpoints/
-.vscode/
 *.egg-info/
+
+# Virtual environment
+venv/
+
+# Spark
+checkpoints/
+
+# Editor
+.vscode/
+.DS_Store
+
+# Streamlit secrets
+dashboard/.streamlit/secrets.toml
