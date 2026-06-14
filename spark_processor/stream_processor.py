@@ -25,6 +25,18 @@ DB_PROPERTIES = {
     "driver":   "org.postgresql.Driver"
 }
 
+# Neon cloud database (for cloud dashboard)
+NEON_URL = os.getenv("NEON_DATABASE_URL")
+
+NEON_PROPERTIES = {
+    "user": "neondb_owner",
+    "password": os.getenv("NEON_PASSWORD", ""),
+    "driver": "org.postgresql.Driver",
+    "sslmode": "require"
+}
+
+NEON_JDBC = "jdbc:postgresql://ep-long-bread-atjashlz-pooler.c-9.us-east-1.aws.neon.tech/neondb"
+
 THRESHOLDS = {
     "pm25": 35.0,
     "pm10": 50.0,
@@ -60,9 +72,15 @@ def create_spark_session() -> SparkSession:
         .getOrCreate()
     )
 
-
 def write_to_postgres(df, table: str):
+    # Write to local PostgreSQL
     df.write.jdbc(url=JDBC_URL, table=table, mode="append", properties=DB_PROPERTIES)
+    
+    # Write to Neon cloud PostgreSQL
+    try:
+        df.write.jdbc(url=NEON_JDBC, table=table, mode="append", properties=NEON_PROPERTIES)
+    except Exception as e:
+        print(f"  ⚠ Neon write failed: {e}")
 
 
 def process_batch(batch_df, batch_id: int):

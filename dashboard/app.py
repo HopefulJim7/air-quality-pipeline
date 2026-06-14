@@ -19,14 +19,19 @@ st.set_page_config(
 
 # ── Database connection ────────────────────────────────────────────────────────
 def get_engine():
-    return create_engine(
-        f"postgresql+psycopg2://"
-        f"{os.getenv('DB_USER', 'airquality')}:"
-        f"{os.getenv('DB_PASSWORD', 'airquality123')}@"
-        f"{os.getenv('DB_HOST', 'localhost')}:"
-        f"{os.getenv('DB_PORT', '5433')}/"
-        f"{os.getenv('DB_NAME', 'airqualitydb')}"
-    )
+    # Use Neon cloud URL if available, otherwise fall back to local
+    neon_url = os.getenv("NEON_DATABASE_URL")
+    if neon_url:
+        return create_engine(neon_url)
+    else:
+        return create_engine(
+            f"postgresql+psycopg2://"
+            f"{os.getenv('DB_USER', 'airquality')}:"
+            f"{os.getenv('DB_PASSWORD', 'airquality123')}@"
+            f"{os.getenv('DB_HOST', 'localhost')}:"
+            f"{os.getenv('DB_PORT', '5433')}/"
+            f"{os.getenv('DB_NAME', 'airqualitydb')}"
+        )
 
 def run_query(sql: str) -> pd.DataFrame:
     engine = get_engine()
