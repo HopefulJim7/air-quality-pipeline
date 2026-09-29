@@ -49,13 +49,13 @@ def aqi_color(val):
     return AQI_COLORS.get(int(val), "#gray")
 
 # ── Header ─────────────────────────────────────────────────────────────────────
-st.title("🌍 Real-Time Air Quality Monitor")
+st.title("Real-Time Air Quality Monitor")
 st.caption("Data refreshes every 30 seconds · Powered by OpenWeather API")
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 1 — Live AQI per City
 # ══════════════════════════════════════════════════════════════════════════════
-st.subheader("📊 Current AQI by City")
+st.subheader("Current AQI by City")
 
 latest_sql = """
     SELECT DISTINCT ON (f.city_id)
@@ -89,9 +89,10 @@ if not latest_df.empty:
                     <h2 style="margin:4px 0;color:{color}">AQI {row['aqi']}</h2>
                     <p style="margin:0;font-size:0.85em">{label}</p>
                     <hr style="margin:6px 0">
-                    <small>PM2.5: {row['pm25']} · PM10: {row['pm10']}</small><br>
-                    <small>NO₂: {row['no2']}</small><br>
-                    <small style="color:gray">{pd.to_datetime(row['timestamp']).strftime('%H:%M:%S')}</small>
+                    <small>Fine Particulate Matter (PM2.5): {row['pm25']} &mu;g/m&sup3;</small><br>
+                    <small>Coarse Particulate Matter (PM10): {row['pm10']} &mu;g/m&sup3;</small><br>
+                    <small>Nitrogen Dioxide (NO&sup2;): {row['no2']} &mu;g/m&sup3;</small><br>
+                    <small style="color:gray">Last updated: {pd.to_datetime(row['timestamp']).strftime('%Y-%m-%d %H:%M:%S')} UTC</small>
                 </div>
                 """,
                 unsafe_allow_html=True
@@ -100,7 +101,7 @@ if not latest_df.empty:
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 2 — PM2.5 Trend Over Time
 # ══════════════════════════════════════════════════════════════════════════════
-st.subheader("📈 PM2.5 Trend Over Time")
+st.subheader("Fine Particulate Matter (PM2.5) — Trend Over Time")
 
 trend_sql = """
     SELECT c.city_name, f.timestamp, f.pm25
@@ -115,20 +116,20 @@ if not trend_df.empty:
         trend_df,
         x="timestamp", y="pm25",
         color="city_name",
-        title="PM2.5 Levels Over Time",
+        title="Fine Particulate Matter (PM2.5) Levels Over Time",
         labels={"pm25": "PM2.5 (μg/m³)", "timestamp": "Time", "city_name": "City"},
         template="plotly_dark"
     )
     fig.add_hline(
         y=35, line_dash="dash", line_color="red",
-        annotation_text="Alert Threshold (35)"
+        annotation_text="Alert Threshold (35 μg/m³)"
     )
     st.plotly_chart(fig, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 3 — City Comparison Bar Chart
 # ══════════════════════════════════════════════════════════════════════════════
-st.subheader("🏙️ City Comparison — Latest Readings")
+st.subheader("City Comparison — Latest Readings")
 
 if not latest_df.empty:
     col1, col2 = st.columns(2)
@@ -139,11 +140,12 @@ if not latest_df.empty:
             x="city_name", y="pm25",
             color="pm25",
             color_continuous_scale="RdYlGn_r",
-            title="PM2.5 by City",
+            title="Fine Particulate Matter (PM2.5) by City",
             labels={"pm25": "PM2.5 (μg/m³)", "city_name": "City"},
             template="plotly_dark"
         )
-        fig_pm25.add_hline(y=35, line_dash="dash", line_color="red")
+        fig_pm25.add_hline(y=35, line_dash="dash", line_color="red",
+                           annotation_text="Alert Threshold")
         st.plotly_chart(fig_pm25, use_container_width=True)
 
     with col2:
@@ -152,17 +154,18 @@ if not latest_df.empty:
             x="city_name", y="aqi",
             color="aqi",
             color_continuous_scale="RdYlGn_r",
-            title="AQI by City",
-            labels={"aqi": "AQI", "city_name": "City"},
+            title="Air Quality Index (AQI) by City",
+            labels={"aqi": "AQI (1=Good, 5=Very Poor)", "city_name": "City"},
             template="plotly_dark"
         )
-        fig_aqi.add_hline(y=4, line_dash="dash", line_color="red")
+        fig_aqi.add_hline(y=4, line_dash="dash", line_color="red",
+                          annotation_text="Alert Threshold")
         st.plotly_chart(fig_aqi, use_container_width=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 4 — Active Alerts
 # ══════════════════════════════════════════════════════════════════════════════
-st.subheader("🚨 Active Alerts")
+st.subheader("Active Pollution Alerts")
 
 alerts_sql = """
     SELECT
@@ -180,7 +183,7 @@ alerts_sql = """
 alerts_df = run_query(alerts_sql)
 
 if alerts_df.empty:
-    st.success("✅ No active alerts — all cities within safe limits")
+    st.success("No active alerts — all cities within safe limits.")
 else:
     def style_alert(val):
         if val == "CRITICAL":
@@ -198,7 +201,7 @@ else:
 # ══════════════════════════════════════════════════════════════════════════════
 # SECTION 5 — Raw Data Table
 # ══════════════════════════════════════════════════════════════════════════════
-with st.expander("🔍 View Raw Data"):
+with st.expander("View Raw Sensor Data"):
     raw_sql = """
         SELECT c.city_name, f.timestamp, f.aqi, f.pm25, f.pm10, f.co, f.no2, f.o3, f.so2
         FROM fact_air_quality f
@@ -210,7 +213,7 @@ with st.expander("🔍 View Raw Data"):
     st.dataframe(raw_df, use_container_width=True)
 
 # ── Silent background refresh ─────────────────────────────────────────────────
-st.sidebar.markdown("### ⚙️ Settings")
+st.sidebar.markdown("### Settings")
 refresh_rate = st.sidebar.selectbox(
     "Refresh interval",
     options=[30, 60, 120, 300],
@@ -219,7 +222,7 @@ refresh_rate = st.sidebar.selectbox(
 
 placeholder = st.sidebar.empty()
 for remaining in range(refresh_rate, 0, -1):
-    placeholder.caption(f"🔄 Refreshing in {remaining}s...")
+    placeholder.caption(f"Refreshing in {remaining}s...")
     time.sleep(1)
 
 st.rerun()
